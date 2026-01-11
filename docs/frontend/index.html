@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>SpeakUp — Brain Tester</h2>
+
+<!-- MINI AGENT -->
+<h3>Chat GPT-4.1-Mini</h3>
+<input id="mini" placeholder="message">
+<button onclick="chatMini()">Send</button>
+<pre id="mini_out"></pre>
+
+<!-- FULL GPT4.1 -->
+<h3>Chat GPT-4.1 Full</h3>
+<input id="full" placeholder="message">
+<button onclick="chatFull()">Send</button>
+<pre id="full_out"></pre>
+
+<!-- RESUME -->
+<h3>Upload Resume PDF</h3>
+<input type="file" id="resume">
+<button onclick="resume()">Extract</button>
+<pre id="resume_out"></pre>
+
+<!-- STT -->
+<h3>Speech to Text</h3>
+<input type="file" id="audiofile">
+<button onclick="stt()">Convert</button>
+<pre id="stt_out"></pre>
+
+<!-- TTS -->
+<h3>Text to Speech</h3>
+<input id="tts_text" placeholder="Say this text">
+<button onclick="tts()">Speak</button>
+<audio id="audio" controls></audio>
+
+<script>
+const BACKEND = "http://127.0.0.1:8000";
+
+async function chatMini(){
+    let fd = new FormData();
+    fd.append("message", document.getElementById("mini").value);
+    let r = await fetch(BACKEND + "/chat-mini", {method:"POST", body:fd});
+    document.getElementById("mini_out").innerText = await r.text();
+}
+
+async function chatFull(){
+    let fd = new FormData();
+    fd.append("message", document.getElementById("full").value);
+    let r = await fetch(BACKEND + "/chat-full", {method:"POST", body:fd});
+    document.getElementById("full_out").innerText = await r.text();
+}
+
+async function resume(){
+    let fd = new FormData();
+    fd.append("file", document.getElementById("resume").files[0]);
+    let r = await fetch(BACKEND + "/resume", {method:"POST", body:fd});
+    document.getElementById("resume_out").innerText = await r.text();
+}
+
+async function stt(){
+    let fd = new FormData();
+    fd.append("audio", document.getElementById("audiofile").files[0]);
+    let r = await fetch(BACKEND + "/stt", {method:"POST", body:fd});
+    document.getElementById("stt_out").innerText = await r.text();
+}
+
+async function tts(){
+    let fd = new FormData();
+    fd.append("text", document.getElementById("tts_text").value);
+    let r = await fetch(BACKEND + "/tts", {method:"POST", body:fd});
+    let blob = await r.blob();
+    document.getElementById("audio").src = URL.createObjectURL(blob);
+}
+</script>
+
+</body>
+</html>
