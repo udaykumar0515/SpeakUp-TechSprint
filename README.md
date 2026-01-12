@@ -151,11 +151,13 @@ FIREBASE_CREDENTIALS=path/to/firebase_credentials.json
 4.  **Run the Backend**
 
     ```bash
-    uvicorn main:app --reload
+    uvicorn main:app --reload --port 8000
     ```
 
 5.  **Open the App**
     Visit `http://localhost:5173` in your browser.
+
+    > **Demo Note**: You can use **any email** to sign up and test the platform immediately. No verification required.
 
 ---
 
@@ -171,5 +173,5 @@ FIREBASE_CREDENTIALS=path/to/firebase_credentials.json
 ---
 
 <center>
-  <sub>Built with ❤️ for the <b>Google TechSprint Hackathon</b></sub>
+  <sub>Built for the <b>Google TechSprint Hackathon</b></sub>
 </center>
