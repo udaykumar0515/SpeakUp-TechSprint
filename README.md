@@ -139,5 +139,5 @@ Test your skills with AI-generated questions and explanations.
 ---
 
 <center>
-  <sub>Built with ❤️ for the <b>Google TechSprint Hackathon</b></sub>
+  <sub>Built for the <b>Google TechSprint Hackathon</b></sub>
 </center>
