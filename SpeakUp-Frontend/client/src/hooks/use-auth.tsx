@@ -13,6 +13,7 @@ import {
   User as FirebaseUser
 } from "firebase/auth";
 import { auth, googleProvider } from "@/firebase";
+import { API_BASE_URL } from "@/lib/config";
 
 // Auth user type based on Firebase
 type AuthUser = {
@@ -66,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         (async () => {
           try {
             const token = await firebaseUser.getIdToken();
-            const response = await fetch(`http://localhost:8000/api/users/${firebaseUser.uid}`, {
+            const response = await fetch(`${API_BASE_URL}/api/users/${firebaseUser.uid}`, {
               headers: {
                 "Authorization": `Bearer ${token}`
               }
@@ -232,7 +233,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     try {
       // Update backend via API
-      const response = await fetch(`http://localhost:8000/api/users/${user.uid}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${user.uid}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

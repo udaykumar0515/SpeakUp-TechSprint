@@ -69,7 +69,26 @@ def extract_resume_text_documentai(file_bytes: bytes, mime_type: str = "applicat
     try:
         # Initialize Document AI client
         opts = {"api_endpoint": f"{LOCATION}-documentai.googleapis.com"}
-        client = documentai.DocumentProcessorServiceClient(client_options=opts)
+        
+        credentials = None
+        
+        # Check if GOOGLE_APPLICATION_CREDENTIALS is set
+        if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+            # Standard auto-discovery
+            pass
+        elif os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON"):
+            # Use the same credentials as Firebase
+            try:
+                from google.oauth2 import service_account
+                import json
+                
+                info = json.loads(os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON"))
+                credentials = service_account.Credentials.from_service_account_info(info)
+                print("✅ Using Document AI credentials from FIREBASE_SERVICE_ACCOUNT_JSON")
+            except Exception as e:
+                print(f"⚠️ Failed to create credentials from JSON: {e}")
+
+        client = documentai.DocumentProcessorServiceClient(client_options=opts, credentials=credentials)
         
         # Full processor name
         name = client.processor_path(PROJECT_ID, LOCATION, PROCESSOR_ID)

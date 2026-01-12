@@ -10,19 +10,35 @@ def initialize_firebase():
         firebase_admin.get_app()
         print("✅ Firebase already initialized")
     except ValueError:
-        # Path to service account key
-        service_account_path = os.path.join(
-            os.path.dirname(__file__), 
-            "firebase-service-account.json"
-        )
+        # Check environment variable first
+        import json
+        service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
         
-        if not os.path.exists(service_account_path):
-            raise FileNotFoundError(
-                f"Firebase service account file not found at: {service_account_path}"
+        if service_account_json:
+            try:
+                cred_dict = json.loads(service_account_json)
+                cred = credentials.Certificate(cred_dict)
+                print("✅ Firebase initialized from environment variable")
+            except Exception as e:
+                # Be careful not to log the actual secret
+                print(f"❌ Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON: {e}")
+                raise
+        else:
+            # Path to service account key
+            service_account_path = os.path.join(
+                os.path.dirname(__file__), 
+                "firebase-service-account.json"
             )
+            
+            if not os.path.exists(service_account_path):
+                raise FileNotFoundError(
+                    f"Firebase service account file not found at: {service_account_path}"
+                )
+            
+            # Initialize with service account
+            cred = credentials.Certificate(service_account_path)
+            print("✅ Firebase initialized from local file")
         
-        # Initialize with service account
-        cred = credentials.Certificate(service_account_path)
         firebase_admin.initialize_app(cred)
         print("✅ Firebase Admin SDK initialized successfully")
 

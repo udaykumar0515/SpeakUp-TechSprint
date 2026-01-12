@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { API_BASE_URL } from "@/lib/config";
 
 type Message = {
   role: 'bot' | 'user';
@@ -48,7 +49,7 @@ export default function MockInterview() {
         try {
           setIsLoading(true);
           
-          const res = await fetch("http://localhost:8000/api/interview/start", {
+          const res = await fetch(`${API_BASE_URL}/api/interview/start`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -112,7 +113,7 @@ export default function MockInterview() {
     
     try {
       setIsLoading(true);
-      const res = await fetch("http://localhost:8000/api/interview/message", {
+      const res = await fetch(`${API_BASE_URL}/api/interview/message`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -148,7 +149,7 @@ export default function MockInterview() {
 
     try {
       setIsLoading(true);
-      const res = await fetch("http://localhost:8000/api/interview/message", {
+      const res = await fetch(`${API_BASE_URL}/api/interview/message`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -185,7 +186,7 @@ export default function MockInterview() {
 
     try {
       setIsLoading(true);
-      const res = await fetch("http://localhost:8000/api/interview/message", {
+      const res = await fetch(`${API_BASE_URL}/api/interview/message`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -223,7 +224,7 @@ export default function MockInterview() {
     if (!sessionId) return;
     
     try {
-      const res = await fetch("http://localhost:8000/api/interview/end", {
+      const res = await fetch(`${API_BASE_URL}/api/interview/end`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

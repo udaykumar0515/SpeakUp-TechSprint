@@ -12,6 +12,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { API_BASE_URL } from "@/lib/config";
 
 type TeachMeCache = {
   [questionId: string]: {
@@ -64,7 +65,7 @@ export default function InterviewResults() {
     setCurrentTeachMe(null);
 
     try {
-      const res = await fetch("http://localhost:8000/api/interview/teach-me", {
+      const res = await fetch(`${API_BASE_URL}/api/interview/teach-me`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
