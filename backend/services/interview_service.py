@@ -64,7 +64,7 @@ def start_new_session(userId: int, interviewType: str, difficulty: str, mode: st
 
 def generate_questions(interview_type: str, difficulty: str, resume_data: dict = None) -> list:
     """
-    Use GPT-4 Full to generate 8-12 dynamic interview questions
+    Use Gemini to generate 8-12 dynamic interview questions
     """
     # Build context from resume if available
     resume_context = ""
@@ -94,28 +94,38 @@ Difficulty Levels:
 - MID: Intermediate complexity, some depth
 - SENIOR: Advanced concepts, complex scenarios, leadership
 
-Respond with VALID JSON array of strings:
-["Question 1", "Question 2", ...]
+CRITICAL: Return ONLY a valid JSON array of strings. No markdown, no explanations.
+Format: ["Question 1", "Question 2", ...]
 
 JSON Response:"""
 
     try:
         messages = [
-            {"role": "system", "content": "You are an expert interviewer. Always respond with valid JSON only."},
+            {"role": "system", "content": "You are an expert interviewer. Always respond with valid JSON only - a simple array of question strings."},
             {"role": "user", "content": prompt}
         ]
         
-        resp = get_gpt_response(messages, model=None, max_tokens=1000)
+        resp = get_gpt_response(messages, model=None, max_tokens=1200)
         if resp and 'choices' in resp:
             content = resp['choices'][0]['message']['content'].strip()
             
-            # Clean markdown
-            if content.startswith("```json"):
-                content = content.replace("```json", "").replace("```", "").strip()
-            elif content.startswith("```"):
-                content = content.replace("```", "").strip()
+            # Aggressive cleaning
+            content = content.replace("```json", "").replace("```", "").strip()
+            # Remove any leading/trailing text
+            start = content.find("[")
+            end = content.rfind("]") + 1
+            if start != -1 and end > start:
+                content = content[start:end]
             
+            # Try to parse
             questions_list = json.loads(content)
+            
+            # Validate it's a list of strings
+            if not isinstance(questions_list, list):
+                raise ValueError("Response is not a list")
+            
+            # Filter to only strings
+            questions_list = [q for q in questions_list if isinstance(q, str) and len(q.strip()) > 10]
             
             # Ensure 8-12 questions
             if len(questions_list) < 8:
@@ -124,10 +134,14 @@ JSON Response:"""
                 questions_list = questions_list[:12]
             
             return [{"id": str(uuid.uuid4()), "text": q} for q in questions_list]
+    except json.JSONDecodeError as je:
+        print(f"❌ JSON Parse Error: {je}")
+        print(f"Content snippet: {content[:200] if 'content' in locals() else 'N/A'}...")
     except Exception as e:
-        print(f"Question generation error: {e}")
+        print(f"❌ Question generation error: {e}")
     
     # Fallback to predefined questions
+    print("🔄 Using fallback questions")
     return get_fallback_questions(interview_type, difficulty)
 
 def get_fallback_questions(interview_type: str, difficulty: str) -> list:

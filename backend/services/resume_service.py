@@ -93,7 +93,7 @@ Respond ONLY with valid JSON."""
     try:
         parsed = generate_structured_json(
             prompt=analysis_prompt,
-            model_name="gemini-1.5-pro",  # Use Pro for better analysis
+            model_name="gemini-pro-latest",  # Use latest Pro model for analysis
             temperature=0.3,
             max_output_tokens=2500
         )

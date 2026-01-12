@@ -500,3 +500,7 @@ app.include_router(dashboard_router, prefix="/api")
 app.include_router(ai_router, prefix="/api")
 
 
+# ---------- ROOT ENDPOINT ----------
+@app.get("/")
+def root():
+    return {"status": "SpeakUp Python Backend Running 🚀 (Google-Powered)", "stack": "Gemini + Document AI + Firebase"}

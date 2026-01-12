@@ -54,54 +54,104 @@ def get_random_questions(topic: str, count: int = 20):
     return shuffled
 
 def get_ai_powered_questions(topic: str):
-    """Generate 3 hard questions using GPT-4.0 Mini"""
-    prompt = f"""Generate exactly 3 difficult {topic} aptitude test questions suitable for competitive exams.
+    """Generate 3 hard questions using Gemini - NO FALLBACK"""
+    # Very simple prompt to avoid truncation and LaTeX
+    prompt = f"""Create 3 challenging {topic} test questions.
 
-Requirements:
-- Questions should be challenging and test deep understanding
-- Each question must have exactly 4 options
-- Provide a detailed explanation for why the correct answer is right
+IMPORTANT: Write ALL math in plain text. NO LaTeX, NO dollar signs, NO special notation.
+Examples:
+- Write "2/3" NOT "$\\frac{{2}}{{3}}$"
+- Write "x^2" NOT "$x^2$"
+- Write "sqrt(16)" NOT "$\\sqrt{{16}}$"
 
-Return ONLY a valid JSON array with this exact structure (no markdown, no code blocks):
+Return ONLY this JSON array (no explanations):
 [
   {{
-    "question": "detailed question text",
-    "options": ["Option A", "Option B", "Option C", "Option D"],
-    "correctAnswer": 0,
-    "difficulty": "hard",
-    "explanation": "Detailed explanation of why this answer is correct and why others are wrong"
+    "question": "plain text question here",
+    "options": ["A", "B", "C", "D"],
+    "correctAnswer": 0
   }}
 ]
 
 Topic: {topic}"""
     
     messages = [
-        {"role": "system", "content": "You are an expert aptitude test creator. Return only valid JSON, no markdown formatting."},
+        {"role": "system", "content": "Return ONLY a JSON array. No markdown, no explanations."},
         {"role": "user", "content": prompt}
     ]
     
-    resp = get_gpt_response(messages)
+    # Use gemini_client with higher token limit
+    from services.gemini_client import generate_text
     
-    if resp and 'choices' in resp:
-        try:
-            content = resp['choices'][0]['message']['content'].strip()
-            # Remove markdown code blocks if present
-            content = content.replace("```json", "").replace("```", "").strip()
-            questions = json.loads(content)
+    content = generate_text(prompt=prompt, max_output_tokens=2000, json_mode=True)
+    
+    try:
+        if not content:
+            print("❌ No response from Gemini")
+            return []
+        
+        print(f"🔍 RAW Response ({len(content)} chars): {content[:200]}...")
+        
+        # Extract JSON array FIRST, then clean
+        start = content.find("[")
+        end = content.rfind("]") + 1
+        
+        if start == -1 or end <= start:
+            print("❌ No JSON array found in response")
+            return []
+        
+        content = content[start:end]
+        # NOW remove any markdown that might be inside
+        content = content.replace("```json", "").replace("```", "").strip()
+
+        print(f"🔍 Extracted JSON: {content[:300]}...")
+        
+        questions = json.loads(content)
+        
+        # Validate structure
+        if not isinstance(questions, list):
+            print(f"❌ Response is not a list: {type(questions)}")
+            return []
             
-            # Add IDs
-            for i, q in enumerate(questions):
+        if len(questions) == 0:
+            print("❌ Empty questions list")
+            return []
+        
+        # Add IDs and validate each question
+        valid_questions = []
+        for i, q in enumerate(questions):
+            if (isinstance(q, dict) and 
+                'question' in q and 
+                'options' in q and 
+                isinstance(q['options'], list) and 
+                len(q['options']) == 4):
                 q['id'] = i + 1
+                if 'correctAnswer' not in q:
+                    q['correctAnswer'] = 0
+                if 'explanation' not in q:
+                    q['explanation'] = "Answer explanation"
+                valid_questions.append(q)
+                print(f"✅ Valid Q{i+1}: {q['question'][:60]}...")
+            else:
+                print(f"❌ Invalid Q{i+1} structure")
+        
+        if len(valid_questions) < 3:
+            print(f"❌ Only got {len(valid_questions)}/3 valid questions - FAILING (no fallback)")
+            return []
+        
+        print(f"✅ SUCCESS: Generated {len(valid_questions)} AI questions")
+        return valid_questions[:3]
             
-            return questions
-        except json.JSONDecodeError as e:
-            print(f"❌ JSON decode error: {e}")
-            print(f"Content: {content}")
-        except Exception as e:
-            print(f"❌ Error parsing AI response: {e}")
-    
-    # Fallback if AI fails
-    return get_random_questions(topic, 3)
+    except json.JSONDecodeError as e:
+        print(f"❌ JSON Parse Error: {e}")
+        if 'content' in locals():
+            print(f"Content: {content[:500]}")
+        return []
+    except Exception as e:
+        print(f"❌ Error generating AI questions: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
 
 def submit_test(userId: int, topic: str, questions: list, answers: list, timeTaken: int = 0):
     """
@@ -116,7 +166,13 @@ def submit_test(userId: int, topic: str, questions: list, answers: list, timeTak
     question_breakdown = []
     
     for idx, question in enumerate(questions):
-        user_answer = answers[idx] if idx < len(answers) else None
+        # Handle both list (frontend) and dict (legacy) formats
+        if isinstance(answers, list):
+            user_answer = answers[idx] if idx < len(answers) else None
+        else:
+            question_id = question.get("id", str(idx))
+            user_answer = answers.get(str(question_id))
+        
         correct_answer = question.get("correctAnswer", 0)
         
         is_correct = user_answer == correct_answer if user_answer is not None else False
@@ -224,7 +280,7 @@ def save_result(result: AptitudeResult):
     return result
 
 def get_history(userId: str):
-    """Get user's aptitude history from Firestore"
+    """Get users aptitude history from Firestore
     # Note: Removed order_by to avoid composite index requirement
     # Sorting is done in Python instead
     """

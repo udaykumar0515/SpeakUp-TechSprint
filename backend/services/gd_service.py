@@ -30,42 +30,53 @@ class GDBot:
     def generate_response(self, topic: str, context_messages: List[Dict], system_prompt_extras: str = ""):
         """Generate a response based on conversation context"""
         
-        # Format context for the LLM
-        # We take the last 5 messages to keep context relevant but concise
-        recent_msgs = context_messages[-5:] 
+        # Take last 3 messages only and trim to 800 chars
+        recent_msgs = context_messages[-3:] 
         formatted_context = "\n".join([
-            f"{m.get('speaker', 'Unknown')} ({m.get('role', 'unknown')}): {m.get('content', '')}" 
+            f"{m.get('speaker', 'Unknown')}: {m.get('content', '')}" 
             for m in recent_msgs
         ])
+        
+        # Trim context to prevent token overflow
+        formatted_context = formatted_context[-800:]
+        
+        # NEW PROMPT - No speaker labels, strict rules to prevent leaking
+        user_prompt = f"""Group discussion topic: {topic}
 
-        system_prompt = f"""You are {self.name}, a {self.personality.lower()} participant in a group discussion about "{topic}".
+Recent conversation:
+{formatted_context}
 
-Guidelines:
-- Keep responses concise (2-3 sentences, max 60 words).
-- Reference what the previous speaker said to show active listening.
-- Stay on topic.
-- Show your {self.personality.lower()} personality.
-- You can end with a handoff like "I'd ask [Name] for their opinion" or just make your point.
+You are {self.name} ({self.personality}).
+Write ONLY what {self.name} would speak now.
 
-- DO NOT mention the AI, the system, or the "monitor". Pretend to be a real human student.
-
-- THE ONLY PARTICIPANTS are: User (the human), Alex, Sarah, and Mike. Do NOT invent other names like "Emma" or "John".
-- THE ONLY PARTICIPANTS are: User (the human), Alex, Sarah, and Mike. Do NOT invent other names like "Emma" or "John".
-- IF this is the FIRST message in the discussion, DO NOT reference what others said (since no one spoke yet). State your own opening opinion.
-- CRITICAL: DO NOT attribute opinions to the User unless they have explicitly stated them in the "Recent discussion". If the User is silent, do NOT say "User, I appreciate your agreement". Instead, ask for their opinion.
-{system_prompt_extras}"""
+RULES (STRICT):
+- 1 to 2 sentences only
+- Max 45 words total
+- No markdown formatting (no **, no #)
+- Do not include speaker labels like "Mike:" or "Sarah:" or "{self.name}:"
+- Do not repeat the transcript
+- Do not quote what others said with quotation marks
+- If you add a question, include only ONE short question at end
+- Just write your response directly"""
 
         messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Recent discussion:\n{formatted_context}\n\nProvide your response as {self.name}:"}
+            {"role": "user", "content": user_prompt}
         ]
         
-        resp = get_gpt_response(messages, model=GPT_MINI_MODEL, max_tokens=100)
+        # Reduced from 150 to 120 tokens for stricter control
+        resp = get_gpt_response(messages, model=None, max_tokens=120)
         
         if resp and 'choices' in resp:
-            return resp['choices'][0]['message']['content'].strip()
+            response_text = resp['choices'][0]['message']['content'].strip()
+            # Clean up any leaked formatting
+            response_text = response_text.replace("**", "").replace("*", "")
+            # Remove any leaked speaker labels at start
+            for name in ["Alex:", "Sarah:", "Mike:", "User:", f"{self.name}:"]:
+                if response_text.startswith(name):
+                    response_text = response_text[len(name):].strip()
+            return response_text
         else:
-            return f"That's an interesting perspective on {topic}. I think we should explore that further."
+            return f"I agree. What does User think?"
 
 class GDMonitor:
     """The Orchestrator (Monitor Bot)"""
@@ -130,7 +141,7 @@ Response:"""
         try:
             ai_response = get_gpt_response(
                 messages=[{"role": "user", "content": analysis_prompt}],
-                model=GPT_MINI_MODEL,
+                model=None,
                 max_tokens=10
             )
             
@@ -288,9 +299,9 @@ def process_message(sessionId: str, userId: int, message: str, action: str = "sp
     
     # 3. Turn Resolution Loop
     generated_messages = []
-    # Allow natural bot-to-bot conversation with random chain lengths
+    # Reduced from 1-3 to 1-2 to limit bot chains and reduce token usage
     import random
-    MAX_CHAIN_LENGTH = random.randint(1, 3)
+    MAX_CHAIN_LENGTH = random.randint(1, 2)
     chain_count = 0
     
     while chain_count < MAX_CHAIN_LENGTH:

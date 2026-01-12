@@ -15,9 +15,32 @@ else:
     genai.configure(api_key=GEMINI_API_KEY)
     print("✅ Gemini API configured successfully")
 
-# Available models
-GEMINI_FLASH = "gemini-2.0-flash-exp"  # Fast, cost-effective
-GEMINI_PRO = "gemini-1.5-pro"          # Advanced reasoning
+# Available models - using latest stable versions
+GEMINI_FLASH = "gemini-flash-latest"  # Fast, cost-effective
+GEMINI_PRO = "gemini-pro-latest"      # Advanced reasoning
+
+def _safe_extract_text(response) -> str:
+    """
+    Safely extract text from Gemini response without using response.text accessor.
+    Handles cases where finish_reason=2 (MAX_TOKENS) returns empty parts.
+    
+    Returns:
+        Extracted text or empty string if no valid parts found
+    """
+    if not response or not getattr(response, "candidates", None):
+        return ""
+    
+    cand = response.candidates[0]
+    content = getattr(cand, "content", None)
+    if not content or not getattr(content, "parts", None):
+        return ""
+    
+    texts = []
+    for part in content.parts:
+        if hasattr(part, "text") and part.text:
+            texts.append(part.text)
+    
+    return "".join(texts).strip()
 
 def generate_text(
     prompt: str,
@@ -32,7 +55,7 @@ def generate_text(
     
     Args:
         prompt: The input prompt
-        model_name: Model to use (gemini-2.0-flash-exp or gemini-1.5-pro)
+        model_name: Model to use (gemini-flash-latest or gemini-pro-latest)
         temperature: Creativity (0.0-1.0)
         max_output_tokens: Maximum response length
         json_mode: If True, instructs model to return JSON
@@ -66,10 +89,55 @@ def generate_text(
             
             response = model.generate_content(prompt)
             
-            if response and response.text:
-                return response.text.strip()
+            # Check if response has candidates
+            if not response.candidates:
+                print(f"⚠️ No candidates in response (attempt {attempt + 1}/{max_retries})")
+                if attempt < max_retries - 1:
+                    time.sleep(2 ** attempt)
+                continue
+            
+            # Check finish reason
+            candidate = response.candidates[0]
+            finish_reason = candidate.finish_reason
+            
+            # finish_reason values:
+            # 0 = FINISH_REASON_UNSPECIFIED
+            # 1 = STOP (normal completion)
+            # 2 = MAX_TOKENS
+            # 3 = SAFETY
+            # 4 = RECITATION
+            # 5 = OTHER
+            
+            # Safely extract text
+            extracted_text = _safe_extract_text(response)
+            
+            # Log finish reason and extracted length for debugging
+            if finish_reason != 1:  # Not normal completion
+                print(f"🔍 finish_reason={finish_reason}, extracted_len={len(extracted_text)}")
+            
+            if finish_reason == 3:  # SAFETY
+                print(f"⚠️ Response blocked by safety filters (attempt {attempt + 1}/{max_retries})")
+                if attempt < max_retries - 1:
+                    time.sleep(2 ** attempt)
+                continue
+            
+            if finish_reason == 2:  # MAX_TOKENS - partial response
+                if extracted_text:
+                    print(f"⚠️ MAX_TOKENS hit but got {len(extracted_text)} chars - returning partial")
+                    return extracted_text
+                else:
+                    print(f"⚠️ MAX_TOKENS hit with empty extraction - retrying (attempt {attempt + 1}/{max_retries})")
+                    if attempt < max_retries - 1:
+                        time.sleep(2 ** attempt)
+                    continue
+            
+            # Normal response or other finish reasons
+            if extracted_text:
+                return extracted_text
             else:
-                print(f"⚠️ Empty response from Gemini (attempt {attempt + 1}/{max_retries})")
+                print(f"⚠️ Empty extraction from Gemini (attempt {attempt + 1}/{max_retries})")
+                if attempt < max_retries - 1:
+                    time.sleep(2 ** attempt)
                 
         except Exception as e:
             print(f"❌ Gemini API error (attempt {attempt + 1}/{max_retries}): {str(e)}")
