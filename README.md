@@ -1,97 +1,102 @@
 # SpeakUp - AI-Powered Placement Prep Platform 🚀
 
-**SpeakUp** is a comprehensive, AI-driven platform designed to supercharge your placement preparation. Whether you're preparing for aptitude tests, technical interviews, or group discussions, SpeakUp provides a realistic, interactive, and personalized environment to practice and improve.
-
 <div align="center">
-  <img src="client/public/vite.svg" alt="SpeakUp Logo" width="100" />
+  <img src="https://www.gstatic.com/images/branding/product/2x/firebase_64dp.png" alt="Firebase" width="40" />
+  <img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg" alt="Gemini" width="40" />
+  <br/>
+  <h1>SpeakUp</h1>
+  <p><b>Your AI-Powered Personal Career Coach</b></p>
+  <p>
+    <a href="#-google-technologies-used">Google Powered</a> •
+    <a href="#-product-walkthrough">View Gallery</a> •
+    <a href="#-getting-started">Get Started</a>
+  </p>
 </div>
 
 ---
 
-## 🌟 Key Features
+## 📖 Project Description
 
-### 1. 📊 Interactive Dashboard
+**SpeakUp** is an advanced AI-powered placement preparation platform that democratizes career readiness. It solves the critical lack of personalized feedback for students by providing realistic, on-demand practice for technical interviews, group discussions, and aptitude tests.
 
-Your central command center for preparation.
-
-- **Personalized Greeting**: Welcomes you back and keeps you motivated.
-- **Smart Stats**: Track your progress with detailed metrics on total sessions, average scores, and activity trends.
-- **Quick Access**: Instantly jump into any practice module (Aptitude, Interview, GD, Resume) with beautiful, animated cards.
-- **Recent Activity**: A timeline of your past sessions with scores and performance indicators to help you stay consistent.
-
-### 2. 🧠 Aptitude Practice Arena
-
-Sharpen your cognitive skills with diverse testing modes.
-
-- **3 Core Topics**: Quantitative Aptitude, Logical Reasoning, and Verbal Ability.
-- **⚡ AI-Powered Challenge Mode**: A special "Hard Questions" mode that generates **3 random, high-difficulty questions** to test your limits. Perfect for quick, intense practice.
-- **Regular Practice**: Customize your test with **10 to 30 questions** based on your time and preference.
-- **Detailed Results**:
-  - **Score Analysis**: Comprehensive performance level (Excellent/Good/Needs Improvement).
-  - **Review Mode**: Go through every question with detailed **correct/incorrect indicators** and **explanations**.
-  - **Visuals**: Circular progress charts to visualize your score.
-
-### 3. 💼 AI Mock Interviewer
-
-Experience realistic interview scenarios without the pressure.
-
-- **Flexible Setup**: Choose your **Interview Type** (HR/Technical), **Difficulty** (Easy/Medium/Hard), and **Mode** (Practice vs. Graded).
-- **Realistic Flow**:
-  - **Greeting Phase**: The session starts only when you professionally greet the interviewer (or auto-starts after 15s).
-  - **AI Chat Interface**: A dynamic, conversational interface where the AI asks relevant questions based on your responses.
-  - **Resume & Non-Resume Modes**: Capable of tailoring questions based on your profile (if configured) or general topics.
-- **Instant Feeback**: Get a detailed report on your answers, highlighting strengths and areas for improvement.
-
-### 4. 🗣️ Group Discussion (GD) Simulator
-
-A unique feature to practice participating in group discussions with AI bots.
-
-- **Smart Bots**: Interact with AI participants who have distinct personalities and roles.
-- **Preparation Phase**: Get 60 seconds to gather your thoughts on the topic before the discussion begins.
-- **Dynamic Topics**: Choose from trending topics (e.g., "AI Impact", "Work from Home") or let the AI pick a random one.
-- **Real-time Metrics**:
-  - **Share of Voice**: Live tracking of how much you speak vs. the bots to ensure balanced participation.
-  - **Speaking Tips**: Context-aware advice displayed during the session.
-  - **Pause Penalties**: Pausing the session is allowed but discourages, affecting your final "Discipline" score.
-- **Comprehensive Analysis**:
-  - Scores on 6 parameters: **Verbal Ability, Confidence, Interactivity, Argument Quality, Topic Relevance, and Leadership**.
-  - **Detailed Feedback**: AI generates a full performance report with actionable advice.
-
-### 5. 📄 Smart Resume Analyzer
-
-Optimize your resume for Applicant Tracking Systems (ATS).
-
-- **ATS Compatibility Score**: Upload your PDF resume and get an instant score (0-100).
-- **Information Extraction**: Automatically parses Skills, Education, and Experience to show you what recruiters see.
-- **Actionable Suggestions**: Specific tips on how to improve your resume's formatting, keywords, and content.
-- **Drag & Drop Interface**: Simple, user-friendly upload zone.
+Built entirely on **Google Cloud**, SpeakUp leverages **Gemini 2.0 Flash** for low-latency conversational coaching and **Document AI** for industrial-grade resume parsing. Securely powered by **Firebase Authentication** and **Firestore**, it bridges the gap between preparation and employment, offering instant, actionable feedback to help job seekers build confidence and land their dream jobs.
 
 ---
 
-## 🛠️ Technology Stack
+## 🏗️ Architecture
 
-### Frontend
+SpeakUp follows a modern, secure, and scalable architecture fully integrated with the Google Cloud ecosystem.
 
-- **Framework**: React 18 + TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS + Shadcn UI
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
-- **Routing**: Wouter
+```mermaid
+flowchart TD
+    User([User / Candidate]) -->|HTTPS| Frontend[React + Vite PWA]
 
-### Backend
+    subgraph Client_Side [Client Layer]
+        Frontend
+    end
 
-- **API Framework**: FastAPI (Python)
-- **Authentication**: Firebase Authentication
-- **Database**: Cloud Firestore (NoSQL)
+    Frontend -->|REST API + Firebase Token| Backend[FastAPI Backend]
 
-### AI & ML (100% Google Technologies)
+    subgraph Cloud_Services [Google Cloud & Firebase]
+        Auth[Firebase Auth]
+        DB[(Cloud Firestore)]
+        Gemini[Gemini API 2.0 Flash]
+        DocAI[Google Document AI]
+    end
 
-- **LLM**: Google Gemini API (2.0 Flash & 1.5 Pro)
-- **OCR**: Google Document AI
-- **Deployment**: Firebase Hosting / Google Cloud Run
+    Backend -->|Verify Token| Auth
+    Backend -->|Store/Retrieve Sessions| DB
+    Backend -->|Generate Feedback & Dialogue| Gemini
+    Backend -->|Extract Resume Data| DocAI
+```
 
-**🎯 Built for Google TechSprint Hackathon**
+---
+
+## 🛠️ Google Technologies Used
+
+We utilize the full power of Google's AI and Cloud stack to deliver a premium experience.
+
+| Feature               | Google Technology          | Purpose                                                                                                                 | Code Location                         |
+| :-------------------- | :------------------------- | :---------------------------------------------------------------------------------------------------------------------- | :------------------------------------ |
+| **Conversational AI** | **Gemini API (2.0 Flash)** | Powers the Interviewer persona, Group Discussion bots, and Aptitude explanations. Selected for its reasoning and speed. | `backend/services/gemini_client.py`   |
+| **Resume Extraction** | **Document AI**            | Performs high-fidelity OCR to extract text from PDF resumes, handling complex layouts better than standard libraries.   | `backend/services/document_ai_ocr.py` |
+| **Authentication**    | **Firebase Auth**          | Provides secure, serverless identity management and session handling.                                                   | `backend/firebase_config.py`          |
+| **Data Storage**      | **Cloud Firestore**        | a scalable NoSQL database for real-time syncing of session history, results, and user profiles.                         | `backend/firebase_config.py`          |
+
+---
+
+## 📸 Product Walkthrough
+
+### 1. Smart Dashboard
+
+Your central command center tracking real-time progress across all modules.
+![Dashboard](screenshots/dashboard.png)
+
+### 2. Resume Analyzer (Powered by Document AI)
+
+Upload your resume to get an instant ATS score and actionable improvement suggestions.
+
+<div style="display: flex; gap: 10px;">
+  <img src="screenshots/resume_upload.png" width="48%" />
+  <img src="screenshots/resume_analysis_result.png" width="48%" />
+</div>
+
+### 3. AI Mock Interviewer
+
+Experience realistic Technical and HR interviews with our AI avatar.
+![Interview Session](screenshots/interview_session.png)
+
+### 4. Group Discussion (GD) Simulator
+
+Practice speaking up in a multi-bot environment (Alex, Sarah, Mike) with real-time turn-taking analysis.
+![GD Session](screenshots/gd_session.png)
+
+### 5. Aptitude Arena
+
+Test your skills with AI-generated questions and explanations.
+![Aptitude Practice](screenshots/aptitude_screen.png)
+
+---
 
 ## 🚀 Getting Started
 
@@ -99,6 +104,7 @@ Optimize your resume for Applicant Tracking Systems (ATS).
 
 - Node.js (v16+)
 - Python (v3.9+)
+- Google Cloud Project with Gemini & Document AI APIs enabled
 
 ### Installation
 
@@ -132,4 +138,6 @@ Optimize your resume for Applicant Tracking Systems (ATS).
 
 ---
 
-<center>Made with ❤️ for Students & Job Seekers</center>
+<center>
+  <sub>Built with ❤️ for the <b>Google TechSprint Hackathon</b></sub>
+</center>
