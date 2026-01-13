@@ -30,7 +30,7 @@ import {
 } from "../types/api-types";
 import { auth } from "@/firebase";
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+import { API_BASE_URL } from "@/lib/config";
 
 // Helper for API calls with Firebase authentication
 async function apiCall<T>(url: string, options?: RequestInit): Promise<T> {
