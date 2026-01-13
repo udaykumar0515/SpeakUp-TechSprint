@@ -286,19 +286,17 @@ export default function AptitudeQuiz({ topic, questionCount, aiPowered, onExit }
           >
             Previous
           </Button>
-
           <div className="flex gap-2">
-             {selectedAnswers[currentIndex] === undefined && (
-                <Button 
-                  variant="secondary" 
-                  onClick={handleNext}
-                >
-                  Skip
-                </Button>
-             )}
+            <Button
+              variant="outline"
+              onClick={handleNext}
+              disabled={selectedAnswers[currentIndex] !== undefined} // Enabled only if NO answer selected
+            >
+              Skip
+            </Button>
             <Button 
               onClick={handleNext} 
-              disabled={selectedAnswers[currentIndex] === undefined}
+              disabled={selectedAnswers[currentIndex] === undefined} // Enabled only if answer IS selected
             >
               {currentIndex === questions.length - 1 ? (
                 submitTest.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Finish Quiz"
