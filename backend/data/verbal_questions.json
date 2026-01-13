@@ -113,7 +113,7 @@
   },
   {
     "id": 15,
-    "question": "Identify the part of speech of the underlined word: 'She sings beautifully.'",
+    "question": "Identify the part of speech of the underlined word: 'beautifully.'",
     "options": ["Noun", "Verb", "Adverb", "Adjective"],
     "correctAnswer": 2,
     "difficulty": "easy",

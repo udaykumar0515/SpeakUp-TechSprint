@@ -7,6 +7,7 @@
   <h1>SpeakUp</h1>
   <p><b>Your AI-Powered Personal Career Coach</b></p>
   <p>
+    <a href="https://speakup-d3593.web.app/" target="_blank">Live Demo</a> •
     <a href="#-google-technologies-used">Google Powered</a> •
     <a href="#-product-walkthrough">View Gallery</a> •
     <a href="#-getting-started">Get Started</a>
