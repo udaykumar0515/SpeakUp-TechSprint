@@ -56,3 +56,6 @@ htmlcov/
 Thumbs.db
 .DS_Store
 docs/
+
+# Verification/Review Reports (internal use only)
+PROJECT_FULL_DOC.md

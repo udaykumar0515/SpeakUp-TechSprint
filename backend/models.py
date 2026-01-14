@@ -95,7 +95,6 @@ class ResumeResult(BaseModel):
     id: Optional[str] = None
     userId: str  # Firebase UID
     atsScore: int
-    atsScore: int
     suggestions: List[str] = Field(default_factory=list)
     fileName: Optional[str] = None
     createdAt: datetime = Field(default_factory=datetime.now)

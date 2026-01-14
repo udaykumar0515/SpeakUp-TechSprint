@@ -261,7 +261,7 @@ def process_greeting(sessionId: str, message: str):
             session["greetingBonus"] = 5  # Extra points for professional greeting
             response = "Good morning! I appreciate your professionalism. Let's get started with the interview."
         else:
-            session["greet ingBonus"] = 2  # Basic greeting
+            session["greetingBonus"] = 2  # Basic greeting
             response = "Hello! Let's begin the interview."
         
         return {
